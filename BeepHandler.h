@@ -10,6 +10,7 @@ class BeepHandler {
 
 private:
   void initiateBeeping(unsigned long currentMillis) {
+    Serial.println("init beeping");
     curBeepMs = 500;
     curQuietMs = 2000;
     startTime = currentMillis;
@@ -26,9 +27,9 @@ public:
     curBeepMs = 0;
   }
 
-  void startOrContinue() {
+  void startOrContinue(unsigned long currentMillis) {
     if(curBeepMs == 0) {
-      initiateBeeping(millis());
+      initiateBeeping(currentMillis);
       digitalWrite(buzzerPin, HIGH);
     }
   }
@@ -39,7 +40,7 @@ public:
     }
     
     unsigned long delta = currentMillis - startTime;
-    if((curBeepMs + curQuietMs)*BEEPS_IN_PATTERN > delta) {
+    if((curBeepMs + curQuietMs)*BEEPS_IN_PATTERN < delta) {
       if(curQuietMs > 500) {
         curBeepMs *= 2;
         curQuietMs /= 2;
@@ -47,7 +48,9 @@ public:
       startTime = currentMillis;
     }
 
-    delta = delta % curBeepMs + curQuietMs;
+    //Serial.println("delta = " + String(delta) + " cur=" + String(currentMillis) + " start=" + String(startTime));
+    delta = delta % (curBeepMs + curQuietMs);
+    //Serial.println("delta = " + String(delta) + " beep=" + String(curBeepMs) + " quiet=" + String(curQuietMs));
     if(delta < curBeepMs)
       digitalWrite(buzzerPin, HIGH);
     else // (delta < curBeepMs + curQuietMs)

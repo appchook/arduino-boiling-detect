@@ -25,6 +25,8 @@ void setup() {
   Serial.begin(9600);  // Initialize Serial to log output
   Wire.begin();        //Joing I2C bus
 
+  Serial.println("Init...");
+
   if (therm.begin() == false) {  // Initialize thermal IR sensor
     Serial.println("Qwiic IR thermometer did not acknowledge! Freezing!");
     while (1)
@@ -62,12 +64,13 @@ void periodic()
   }
 
   bool updated = detector.update_state(therm.object());
+
   if(updated)
   {
     bool boiling = detector.get_detection();
     if(boiling) 
     {
-      beepHandler.startOrContinue();
+      beepHandler.startOrContinue(currentMillis);
     }
     else
     {
