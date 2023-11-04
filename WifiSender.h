@@ -24,7 +24,7 @@ float buffer[BUFFER_DEPTH_MAX];
 char bufferIdx = 0;
 
 char sendBuffer[70]; // has to be > (6 [size of float '12.34,'] * BUFFER_DEPTH_MAX)
-                     // also has to be > 25 + int size (for the seesion Id string)
+                     // also has to be > 38 + 'int size'*2 (for the seesion Id & time strings)
 
 class WifiSender 
 {
@@ -71,7 +71,6 @@ public:
       while (client.available()) {
         client.read(sendBuffer, sizeof(sendBuffer));
       }      
-      Serial.println();
     } else {
       //Serial.println("Disconnecting from server...");
       //client.stop();      
@@ -89,17 +88,22 @@ public:
 
     if(bufferIdx > BUFFER_DEPTH_TO_SEND) {
       Serial.println("- Sending " + String((int)bufferIdx) + " measurments to server -");
-      if (client.connect(server, port)) {
-        Serial.println("Connected to server");
+      if(!client.connected()) {
+        Serial.println("Re-Connect to server");
+        client.connect(server, port);
+      }
+
+      if(client.connected()) {
+        Serial.println("Sending update");
 
         client.println("POST /update HTTP/1.1");
         client.println("Host: "+String(server)+":"+String(port));
         client.println("Content-Type:application/json");
         client.println("Transfer-Encoding: chunked");
-        client.println("Connection: close");
+        //client.println("Connection: keep-alive"); // keep-alive is infered in HTTP 1.1
         client.println();
 
-        int len = sprintf(sendBuffer, "{\"session\":%d,\"temps\":[", sessionId); // 25 chars without the int
+        int len = sprintf(sendBuffer, "{\"session\":%d,\"time\":%d,\"temps\":[", sessionId, millis()/1000); // 38 chars without the ints
         client.println(String(len, 16));
         client.println(sendBuffer);
 
@@ -135,11 +139,11 @@ public:
         client.println("POST /createSession HTTP/1.1");
         client.println("Host: "+String(server)+":"+String(port));
         client.println("Content-Length: 0");
-        client.println("Connection: close");
+        //client.println("Connection: keep-alive");  // keep-alive is infered in HTTP 1.1
         client.println();
         
         int lineBreakCount = 0;
-        while (client.connected()) {
+        if (client.connected()) {
           while (client.available() && lineBreakCount < 4) {
             char c = client.read();
             Serial.write(c); // DEBUG!
@@ -161,8 +165,7 @@ public:
           } else {
             Serial.println("server response did contain \\r\\n\\r\\n");
           }
-        }
-        client.stop();
+        }        
     } else {
       Serial.println("Error: failed to connect to server");
     }
