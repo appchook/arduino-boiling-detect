@@ -5,24 +5,35 @@
 
 #include "SteadyStateDetectorCuSum.h"
 #include "BeepHandler.h"
+#include "WifiSender.h"
 
 IRTherm therm;  // Create an IRTherm object to interact with throughout
 unsigned long currentMillis, previousMillis;
 SteadyStateDetectorCuSum detector;
 BeepHandler beepHandler;
+WifiSender wifiSender;
 
 #define BLINK_INTERVAL 1000
 int buzzerPin = 16;
 const int BUTTON_PIN = 14;  // the number of the pushbutton pin
 
-void soundSetupComplete() {
+void setupCompleteBeep() {
   digitalWrite(buzzerPin, HIGH);
   delay(500);
   digitalWrite(buzzerPin, LOW);
 }
 
+void errorBeep() {
+  while(true) {
+    digitalWrite(buzzerPin, HIGH);
+    delay(200);
+    digitalWrite(buzzerPin, LOW);
+    delay(200);
+  }
+}
+
 void setup() {
-  Serial.begin(9600);  // Initialize Serial to log output
+  Serial.begin(115200);  // Initialize Serial to log output
   Wire.begin();        //Joing I2C bus
 
   Serial.println("Init...");
@@ -40,15 +51,20 @@ void setup() {
 
   //pinMode(LED_BUILTIN, OUTPUT); // LED pin as output
 
-  currentMillis = millis();
-  previousMillis = currentMillis;
-
   pinMode(buzzerPin, OUTPUT);
   pinMode(BUTTON_PIN, INPUT_PULLUP);
 
-  detector.init();
+  detector.init();    
 
-  soundSetupComplete();
+  setupCompleteBeep();
+
+  if(wifiSender.init() != 0)
+    errorBeep();
+
+  currentMillis = millis();
+  previousMillis = currentMillis;
+
+  Serial.println("Init done!");
 }
 
 
@@ -64,6 +80,7 @@ void periodic()
   }
 
   bool updated = detector.update_state(therm.object());
+  wifiSender.update(therm.object());
 
   if(updated)
   {
@@ -84,12 +101,15 @@ void loop() {
   // digitalWrite(LED_BUILTIN, HIGH);
   currentMillis = millis();
   if (currentMillis - previousMillis >= BLINK_INTERVAL) {
-    //sevseg.setNumber(numbers[curIdx]);
+
+    if((currentMillis - previousMillis) - BLINK_INTERVAL > 200)
+      Serial.println("Warning, periodic late by " + String((currentMillis - previousMillis) - BLINK_INTERVAL) + " ms");
     previousMillis = currentMillis;
 
     periodic();
   }
 
+  wifiSender.maintain();
   beepHandler.handle(currentMillis);
 
   // digitalWrite(LED_BUILTIN, LOW);
