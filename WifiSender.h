@@ -23,7 +23,7 @@ int sessionId = 0;
 float buffer[BUFFER_DEPTH_MAX];
 char bufferIdx = 0;
 
-char sendBuffer[70]; // has to be > (6 [size of float '12.34,'] * BUFFER_DEPTH_MAX)
+char sendBuffer[71]; // has to be > (7 [size of float '12.345,'] * BUFFER_DEPTH_MAX)
                      // also has to be > 38 + 'int size'*2 (for the seesion Id & time strings)
 
 class WifiSender 
@@ -109,7 +109,7 @@ public:
 
         len = 0;
         for(int i = 0; i < bufferIdx; i++) {
-          dtostrf(buffer[i], 1, 2, sendBuffer+len);
+          dtostrf(buffer[i], 1, 3, sendBuffer+len);
           len += strlen(sendBuffer+len);
           sendBuffer[len]=',';
           len++;

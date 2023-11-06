@@ -23,7 +23,7 @@ void setupCompleteBeep() {
   digitalWrite(buzzerPin, LOW);
 }
 
-void errorBeep() {
+void endlessErrorBeep() {
   while(true) {
     digitalWrite(buzzerPin, HIGH);
     delay(200);
@@ -40,8 +40,7 @@ void setup() {
 
   if (therm.begin() == false) {  // Initialize thermal IR sensor
     Serial.println("Qwiic IR thermometer did not acknowledge! Freezing!");
-    while (1)
-      ;
+    endlessErrorBeep();
   }
   Serial.println("Qwiic IR Thermometer did acknowledge.");
 
@@ -59,7 +58,7 @@ void setup() {
   setupCompleteBeep();
 
   if(wifiSender.init() != 0)
-    errorBeep();
+    endlessErrorBeep();
 
   currentMillis = millis();
   previousMillis = currentMillis;
