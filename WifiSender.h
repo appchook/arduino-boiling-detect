@@ -23,7 +23,7 @@ int sessionId = 0;
 float buffer[BUFFER_DEPTH_MAX];
 char bufferIdx = 0;
 
-char sendBuffer[71]; // has to be > (7 [size of float '12.345,'] * BUFFER_DEPTH_MAX)
+char sendBuffer[70]; // has to be > (6 {size of float '12.34,'} * BUFFER_DEPTH_MAX + 2 (size of ']}')
                      // also has to be > 38 + 'int size'*2 (for the seesion Id & time strings)
 
 class WifiSender 
@@ -77,6 +77,19 @@ public:
     }
   }
 
+  bool establishConnection() {
+    if(!client.connected()) {
+      Serial.println("(Re)Connect to server");
+      client.connect(server, port);
+    }
+
+    bool rt = client.connected();
+    if(!rt) {
+      Serial.println("Error: failed to connect to server");
+    }
+    return rt;
+  }
+
   void update(float val)
   {
     if(bufferIdx < BUFFER_DEPTH_MAX) {
@@ -88,12 +101,7 @@ public:
 
     if(bufferIdx > BUFFER_DEPTH_TO_SEND) {
       Serial.println("- Sending " + String((int)bufferIdx) + " measurments to server -");
-      if(!client.connected()) {
-        Serial.println("Re-Connect to server");
-        client.connect(server, port);
-      }
-
-      if(client.connected()) {
+      if(establishConnection()) {
         Serial.println("Sending update");
 
         client.println("POST /update HTTP/1.1");
@@ -109,7 +117,7 @@ public:
 
         len = 0;
         for(int i = 0; i < bufferIdx; i++) {
-          dtostrf(buffer[i], 1, 3, sendBuffer+len);
+          dtostrf(buffer[i], 1, 2, sendBuffer+len);
           len += strlen(sendBuffer+len);
           sendBuffer[len]=',';
           len++;
@@ -124,51 +132,46 @@ public:
 
         bufferIdx = 0;
 
-      } else {
-        Serial.println("Error: failed to connect to server");
-      }
+      } 
     }
   }
 
   void updateSessionId()
   {
     Serial.println("- updateSessionId -");
-    if (client.connect(server, port)) {
-        Serial.println("Connected to server");
+    if (establishConnection()) {
+      Serial.println("Creating session...");
 
-        client.println("POST /createSession HTTP/1.1");
-        client.println("Host: "+String(server)+":"+String(port));
-        client.println("Content-Length: 0");
-        //client.println("Connection: keep-alive");  // keep-alive is infered in HTTP 1.1
-        client.println();
-        
-        int lineBreakCount = 0;
-        if (client.connected()) {
-          while (client.available() && lineBreakCount < 4) {
-            char c = client.read();
-            Serial.write(c); // DEBUG!
-            if(c == '\n' || c == '\r')
-              lineBreakCount++;
-            else 
-              lineBreakCount = 0;            
-          }
+      client.println("POST /createSession HTTP/1.1");
+      client.println("Host: "+String(server)+":"+String(port));
+      client.println("Content-Length: 0");
+      //client.println("Connection: keep-alive");  // keep-alive is infered in HTTP 1.1
+      client.println();
+      
+      int lineBreakCount = 0;
+      while (client.available() && lineBreakCount < 4) {
+        char c = client.read();
+        Serial.write(c); // DEBUG!
+        if(c == '\n' || c == '\r')
+          lineBreakCount++;
+        else 
+          lineBreakCount = 0;            
+      }
 
-          int len = 0;
-          if(lineBreakCount == 4) {
-            while (client.available()) {
-              len += client.read(sendBuffer+len, sizeof(sendBuffer)-len);              
-              sendBuffer[len] = 0;
-              Serial.print(sendBuffer); // DEBUG!!
-            }
-            sessionId = atoi(sendBuffer);
-            Serial.println("session ID is: " + String(sessionId));
-          } else {
-            Serial.println("server response did contain \\r\\n\\r\\n");
-          }
-        }        
-    } else {
-      Serial.println("Error: failed to connect to server");
-    }
+      int len = 0;
+      if(lineBreakCount == 4) {
+        while (client.available()) {
+          len += client.read(sendBuffer+len, sizeof(sendBuffer)-len);              
+          sendBuffer[len] = 0;
+          Serial.print(sendBuffer); // DEBUG!!
+        }
+        sessionId = atoi(sendBuffer);
+        Serial.println();
+        Serial.println("session ID is: " + String(sessionId));
+      } else {
+        Serial.println("server response did not contain \\r\\n\\r\\n");
+      }
+    } 
   }
 
   void printWifiStatus()
