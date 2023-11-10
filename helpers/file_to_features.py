@@ -1,9 +1,10 @@
-
 import numpy as np
 #import matplotlib.pyplot as plt
 import json
 #import sys
 
+HACK_COUNT = 20
+HACK_FAR_BACK = 20
 
 def hackArray(arr, count):
     ret = []
@@ -47,6 +48,19 @@ def hackArrayAddStatsWithAvg(arr, count, avgFarBack):
         ret.append(b)
     return np.array(ret)
 
+def last_features(inFile):
+    print("reading", inFile)
+    with open(inFile) as f:    
+        jdata = json.load(f)
+
+    temp_arr = np.array([ent["temp"] for ent in jdata])
+    if(len(temp_arr) < HACK_COUNT):
+        return None
+    
+    features = createFeatures(len(temp_arr)-HACK_COUNT-1, temp_arr, HACK_COUNT, HACK_FAR_BACK)
+    return features
+
+
 def file_to_features(inFile):
     print("reading", inFile)
     with open(inFile) as f:    
@@ -75,7 +89,7 @@ def file_to_features(inFile):
     avg_time_arr = np.average(time_arr, axis=1)[:,None]
 
     #x_arr = hackArrayAddStats(temp_arr, 10)
-    x_arr = hackArrayAddStatsWithAvg(temp_arr, 20, 20)
+    x_arr = hackArrayAddStatsWithAvg(temp_arr, HACK_COUNT, HACK_FAR_BACK)
     #x_arr = x_arr.squeeze()
 
     avg_time_arr = avg_time_arr[len(avg_time_arr) - len(x_arr):]

@@ -1,5 +1,8 @@
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2' # avoid warning ' This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.' 
+
 import tensorflow as tf
-from file_to_features import file_to_features, createFeatures
+from file_to_features import file_to_features, createFeatures, last_features
 
 import sys
 
@@ -11,19 +14,21 @@ if len(sys.argv) < 2:
 else:
     inFile = sys.argv[1]
 
+outFile = None
 if len(sys.argv) > 2:
     outFile = sys.argv[2]
 
-model = tf.keras.models.load_model('my_model.keras')
+model = tf.keras.models.load_model('boiler_model.keras')
 
-(x_arr, _), _ = file_to_features(inFile)
+#(x_arr, _), _ = file_to_features(inFile)
+x_arr = last_features(inFile)
 
-tst = x_arr[-1,None]
+tst = x_arr[None,:] 
 print(tst.shape)
 pred = model.predict(tst)
 print("prediction: ", pred)
 
-if outFile:
+if outFile != None:
     with open(outFile, "w") as outfile:
-        outfile.write(pred)
+        outfile.write(str(pred[0][0]))
 

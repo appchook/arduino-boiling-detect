@@ -69,7 +69,9 @@ print(avg_time_arr.shape)
 
 # train_ds, val_ds, test_ds = get_dataset_partitions_tf(ds, int(tf.data.experimental.cardinality(ds)))
 
-x_tr, x_ts, y_tr, y_ts = train_test_split(x_arr, avg_time_arr, test_size = 0.2, random_state=42, shuffle=True)
+# x_tr, x_ts, y_tr, y_ts = train_test_split(x_arr, avg_time_arr, test_size = 0.2, random_state=42, shuffle=True)
+x_tr = x_arr
+y_tr = avg_time_arr
 
 tf.random.set_seed(42)
 
