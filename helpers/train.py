@@ -2,10 +2,11 @@ import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2' # avoid warning ' This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.' 
 
 import tensorflow as tf
+from sklearn.model_selection import train_test_split
+from file_to_features import file_to_features, createFeatures
 
 import numpy as np
 import matplotlib.pyplot as plt
-import json
 import sys
 
 def clean_outliers(time_arr, temp_arr, min, max):
@@ -33,89 +34,17 @@ def get_dataset_partitions_tf(ds, ds_size, train_split=0.8, val_split=0.1, test_
     
     return train_ds, val_ds, test_ds
 
-def hackArray(arr, count):
-    ret = []
-    for i in range(0, len(arr) - count):
-        a = arr[i:i+count]
-        ret.append(a)
-    return np.array(ret)
-
-def getDiffFromAvg(arr, i, count, idxForAvg):    
-    if idxForAvg < 0:
-        return None
-    a = arr[idxForAvg:idxForAvg+count]
-    prevAvg = np.average(a)
-    return arr[i:i+count] - prevAvg
-
-# def hackArrayAddStats(arr, count):
-#     ret = []
-#     firstTemp = 0
-#     for i in range(0, len(arr) - count):
-#         a = arr[i:i+count]
-#         dif = np.diff(a)
-#         dif2 = [1/v for v in dif]
-#         b = np.array([np.sum(dif), np.var(a), np.var(dif), np.sum(np.cumsum(dif)), np.sum(dif2), np.var(dif2), np.sum(np.cumsum(dif2))])[:,None]
-#         ret.append(b)
-#     return np.array(ret)
-
-def createFeatures(i, arr, count, avgFarBack):
-    diffFromFromAvg = getDiffFromAvg(arr, i, count, i-avgFarBack)
-    if diffFromFromAvg is None:
-        return None
-    
-    return np.array([np.sum(diffFromFromAvg), np.var(diffFromFromAvg), np.sum(np.cumsum(diffFromFromAvg))])#[:,None]
-
-def hackArrayAddStatsWithAvg(arr, count, avgFarBack):
-    ret = []    
-    for i in range(0, len(arr) - count):
-        b = createFeatures(i, arr, count, avgFarBack)
-        if b is None:
-            continue
-
-        ret.append(b)
-    return np.array(ret)
 
 if len(sys.argv) < 2:
     print("missing input file")
     #sys.exit()
-    inFile = "json_fixed_expanded.json"
+    #inFile = "json_fixed_expanded.json"
+    inFile = "3_expanded.json"
 else:
     inFile = sys.argv[1]
 
-print("reading", inFile)
-with open(inFile) as f:    
-    jdata = json.load(f)
+(x_arr, avg_time_arr), (orig_time_arr, temp_arr) = file_to_features(inFile)
 
-last_time = jdata[-1]["time"]
-time_arr = np.array([last_time - ent["time"] for ent in jdata])
-orig_time_arr = time_arr
-temp_arr = np.array([ent["temp"] for ent in jdata])
-
-# just to make easier to debug
-# time_arr = time_arr[0:10]
-# temp_arr = temp_arr[0:10]
-
-# temp_diff_arr = np.diff(temp_arr, prepend=np.array([0]))
-
-# time_arr, temp_diff_arr = clean_outliers(time_arr, temp_diff_arr, -10, 10)
-
-# plt.scatter(temp_diff_arr, time_arr)
-# plt.show()
-
-print(time_arr.shape)
-
-time_arr = hackArray(time_arr,10)
-time_arr = time_arr.squeeze()
-avg_time_arr = np.average(time_arr, axis=1)[:,None]
-
-#x_arr = hackArrayAddStats(temp_arr, 10)
-x_arr = hackArrayAddStatsWithAvg(temp_arr, 20, 20)
-#x_arr = x_arr.squeeze()
-
-avg_time_arr = avg_time_arr[len(avg_time_arr) - len(x_arr):]
-
-print(time_arr)
-print(x_arr)
 #sums = temp_diff_arr[:,[20]]
 #vars = temp_diff_arr[:,[21]]
 #plt.scatter(sums, avg_time_arr)
@@ -136,31 +65,38 @@ print(avg_time_arr.shape)
 # ds = tf.data.Dataset.zip((tf.data.Dataset.from_tensor_slices(time_arr), 
 #                           tf.data.Dataset.from_tensor_slices(temp_diff_arr)))
 
-ds = tf.data.Dataset.from_tensor_slices((x_arr, avg_time_arr))
+# ds = tf.data.Dataset.from_tensor_slices((x_arr[:,None], avg_time_arr))
 
-train_ds, val_ds, test_ds = get_dataset_partitions_tf(ds, int(tf.data.experimental.cardinality(ds)))
+# train_ds, val_ds, test_ds = get_dataset_partitions_tf(ds, int(tf.data.experimental.cardinality(ds)))
+
+x_tr, x_ts, y_tr, y_ts = train_test_split(x_arr, avg_time_arr, test_size = 0.2, random_state=42, shuffle=True)
 
 tf.random.set_seed(42)
 
 # Create a model using the Sequential API
 model = tf.keras.Sequential([
-  # tf.keras.Input(shape=(12,)),
+  tf.keras.Input(shape=(3,)),
   #tf.keras.layers.Dense(10, activation='sigmoid'),
-  tf.keras.layers.Dense(1, activation="linear")
+  tf.keras.layers.Dense(3, activation= tf.keras.activations.relu),
+  tf.keras.layers.Dense(1, activation= tf.keras.activations.linear)
 ])
 
-#model.summary()
+model.summary()
 
 # Compile the model
 model.compile(loss=tf.keras.losses.mae, # mae is short for mean absolute error
-              optimizer=tf.keras.optimizers.SGD(), # SGD is short for stochastic gradient descent
+              #optimizer=tf.keras.optimizers.SGD(), # SGD is short for stochastic gradient descent
+              optimizer=tf.keras.optimizers.Adam(learning_rate=0.1)
               #metrics=["mae"]
-              )
+              )  
 
 # Fit the model
 # model.fit(X, y, epochs=5) # this will break with TensorFlow 2.7.0+
-model.fit(x_arr, avg_time_arr, epochs=100)
-# model.fit(train_ds, epochs=50)
+#model.fit(x_arr, avg_time_arr, epochs=100)
+model.fit(x_tr, y_tr, epochs=100)
+#model.fit(ds, epochs=50)
+
+model.save('boiler_model.keras')
 
 tst = x_arr[1,None]
 print(tst.shape)
@@ -174,6 +110,8 @@ pred_temp = []
 my_xs = []
 for i in range(1, 100):
     idx = int(i*(len(temp_arr)/100))
+    if(idx < 20):
+        continue
     my_x = createFeatures(idx, temp_arr, 20, 20)#[None,:]
     my_xs.append(my_x)
     #print(my_x.shape)
