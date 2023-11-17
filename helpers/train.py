@@ -9,30 +9,30 @@ import numpy as np
 import matplotlib.pyplot as plt
 import sys
 
-def clean_outliers(time_arr, temp_arr, min, max):
-    ret_time_arr = []
-    ret_temp_arr = []
-    for time,temp in zip(time_arr, temp_arr):
-        if(temp < max and temp > min):
-            ret_time_arr.append(time)
-            ret_temp_arr.append(temp)
-    return np.array(ret_time_arr)[:,None], np.array(ret_temp_arr,None)[:,None]
+# def clean_outliers(time_arr, temp_arr, min, max):
+#     ret_time_arr = []
+#     ret_temp_arr = []
+#     for time,temp in zip(time_arr, temp_arr):
+#         if(temp < max and temp > min):
+#             ret_time_arr.append(time)
+#             ret_temp_arr.append(temp)
+#     return np.array(ret_time_arr)[:,None], np.array(ret_temp_arr,None)[:,None]
 
-def get_dataset_partitions_tf(ds, ds_size, train_split=0.8, val_split=0.1, test_split=0.1, shuffle=True, shuffle_size=10000):
-    assert (train_split + test_split + val_split) == 1
+# def get_dataset_partitions_tf(ds, ds_size, train_split=0.8, val_split=0.1, test_split=0.1, shuffle=True, shuffle_size=10000):
+#     assert (train_split + test_split + val_split) == 1
     
-    if shuffle:
-        # Specify seed to always have the same split distribution between runs
-        ds = ds.shuffle(shuffle_size, seed=12)
+#     if shuffle:
+#         # Specify seed to always have the same split distribution between runs
+#         ds = ds.shuffle(shuffle_size, seed=12)
     
-    train_size = int(train_split * ds_size)
-    val_size = int(val_split * ds_size)
+#     train_size = int(train_split * ds_size)
+#     val_size = int(val_split * ds_size)
     
-    train_ds = ds.take(train_size)    
-    val_ds = ds.skip(train_size).take(val_size)
-    test_ds = ds.skip(train_size).skip(val_size)
+#     train_ds = ds.take(train_size)    
+#     val_ds = ds.skip(train_size).take(val_size)
+#     test_ds = ds.skip(train_size).skip(val_size)
     
-    return train_ds, val_ds, test_ds
+#     return train_ds, val_ds, test_ds
 
 
 if len(sys.argv) < 2:
