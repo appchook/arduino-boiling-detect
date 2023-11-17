@@ -77,8 +77,9 @@ tf.random.set_seed(42)
 
 # Create a model using the Sequential API
 model = tf.keras.Sequential([
-  tf.keras.Input(shape=(3,)),
+  tf.keras.Input(shape=(5,)),
   #tf.keras.layers.Dense(10, activation='sigmoid'),
+  tf.keras.layers.Dense(5, activation= tf.keras.activations.relu),
   tf.keras.layers.Dense(3, activation= tf.keras.activations.relu),
   tf.keras.layers.Dense(1, activation= tf.keras.activations.linear)
 ])
@@ -113,7 +114,7 @@ pred_temp = []
 my_xs = []
 for i in range(1, 100):
     idx = int(i*(len(temp_arr)/100))
-    if(idx < 20):
+    if(idx < 20 or idx > len(temp_arr) - 20):
         continue
     my_x = createFeatures(idx, temp_arr, 20, 20)#[None,:]
     my_xs.append(my_x)
