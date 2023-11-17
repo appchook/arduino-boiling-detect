@@ -98,7 +98,8 @@ model.compile(loss=tf.keras.losses.mae, # mae is short for mean absolute error
 model.fit(x_tr, y_tr, epochs=100)
 #model.fit(ds, epochs=50)
 
-model.save('boiler_model.keras')
+print("NOT SAVING THE MODEL!")
+# model.save('boiler_model.keras')
 
 tst = x_arr[1,None]
 print(tst.shape)
