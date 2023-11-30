@@ -1,0 +1,17 @@
+D2 -> Wifi TX
+D3 -> Wifi RX
+
+A5 -> optical-red (SCL)
+A4 -> optical-brown
+A2 -> beep+
+A0 -> button
+
+gnd -> button
+gnd -> optical-orange
+gnd -> beep-
+gnd -> Wifi
+
+V5 -> Wifi
+V3.3 -> optical-yello
+
+

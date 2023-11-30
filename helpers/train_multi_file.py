@@ -18,6 +18,8 @@ if len(sys.argv) < 2:
 else:
     inFiles = sys.argv[1:]
 
+single = len(inFiles) == 1
+
 def myConcat(ar1, ar2):
     if ar1 is None:
         return ar2
@@ -27,14 +29,14 @@ def myConcat(ar1, ar2):
 x_arr = None
 avg_time_arr = None
 for inFile in inFiles:
-    (single_x_arr, single_avg_time_arr), _ = file_to_features(inFile)
+    (single_x_arr, single_avg_time_arr), (orig_time_arr, temp_arr) = file_to_features(inFile)
     x_arr = myConcat(x_arr, single_x_arr)
     avg_time_arr = myConcat(avg_time_arr, single_avg_time_arr)
 
-
-# for i in range(len(x_arr[0])):
-#     plt.scatter(x_arr[:,[i]], avg_time_arr)
-# plt.show()
+if single:
+    for i in range(len(x_arr[0])):
+        plt.scatter(x_arr[:,[i]], avg_time_arr)
+    plt.show()
 
 print("after hacking and consolidating:")
 print(x_arr.shape)
@@ -101,34 +103,34 @@ for inFile in inFiles:
     outFile = os.path.splitext(inFile)[0]+".png"
     plt.savefig(outFile)
 
-# tst = x_arr[1,None]
-# print(tst.shape)
-# pred = model.predict(tst)
-# print("prediction: ", pred)
+if single:
+    tst = x_arr[1,None]
+    print(tst.shape)
+    pred = model.predict(tst)
+    print("prediction: ", pred)
 
+    plt.clf()
+    pred = []
+    pred_temp = []
+    my_xs = []
+    for i in range(1, 100):
+        idx = int(i*(len(temp_arr)/100))
+        if(idx < 20):
+            continue
+        my_x = createFeatures(idx, temp_arr, 20, 20)#[None,:]
+        my_xs.append(my_x)
+        #print(my_x.shape)
+        #model.predict(my_x)
+        pred_temp.append(temp_arr[idx])
 
-# plt.clf()
-# pred = []
-# pred_temp = []
-# my_xs = []
-# for i in range(1, 100):
-#     idx = int(i*(len(temp_arr)/100))
-#     if(idx < 20):
-#         continue
-#     my_x = createFeatures(idx, temp_arr, 20, 20)#[None,:]
-#     my_xs.append(my_x)
-#     #print(my_x.shape)
-#     #model.predict(my_x)
-#     pred_temp.append(temp_arr[idx])
+    my_xs = np.array(my_xs)
+    #print(my_xs.shape)
+    pred = model.predict(my_xs)
+    #print(pred.shape)
 
-# my_xs = np.array(my_xs)
-# #print(my_xs.shape)
-# pred = model.predict(my_xs)
-# #print(pred.shape)
-
-# plt.scatter(temp_arr, orig_time_arr)
-# plt.scatter(pred_temp, pred)
-# plt.show()
+    plt.scatter(temp_arr, orig_time_arr)
+    plt.scatter(pred_temp, pred)
+    plt.show()
 
 
 

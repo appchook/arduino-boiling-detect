@@ -35,8 +35,9 @@ def createFeatures(i, arr, count, avgFarBack):
     diffFromFromAvg = getDiffFromAvg(arr, i, count, i-avgFarBack)
     if diffFromFromAvg is None:
         return None
-    
-    return np.array([np.sum(diffFromFromAvg), np.var(diffFromFromAvg), np.sum(np.cumsum(diffFromFromAvg))])#[:,None]
+    curAvg = np.average(arr[i:i+count])
+    diffLastFromFirst = arr[i+count] - arr[i]
+    return np.array([np.sum(diffFromFromAvg), np.var(diffFromFromAvg), np.sum(np.cumsum(diffFromFromAvg)), curAvg, diffLastFromFirst])#[:,None]
 
 def hackArrayAddStatsWithAvg(arr, count, avgFarBack):
     ret = []    

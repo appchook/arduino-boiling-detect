@@ -26,15 +26,18 @@ model = tf.keras.models.load_model('boiler_model.keras')
 def predict():
     #(x_arr, _), _ = file_to_features(inFile)
     x_arr = last_features(inFile)
-
-    tst = x_arr[None,:] 
-    print(tst.shape)
-    pred = model.predict(tst)
-    print("prediction: ", pred)
+    if x_arr is None:
+        predStr = "-1"
+    else:
+        tst = x_arr[None,:] 
+        print(tst.shape)
+        pred = model.predict(tst)
+        print("prediction: ", pred)
+        predStr = str(pred[0][0])
 
     if outFile != None:
         with open(outFile, "w") as outfile:
-            outfile.write(str(pred[0][0]))
+            outfile.write(predStr)
 
 prev_stamp = 0
 while(True):

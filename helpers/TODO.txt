@@ -1,0 +1,5 @@
+TODO:
+1. Try XGBoost regression [https://www.kaggle.com/code/carlmcbrideellis/an-introduction-to-xgboost-regression]
+2. Try regularization [https://www.tensorflow.org/tutorials/keras/overfit_and_underfit#add_weight_regularization]
+3. Try using RuleFit
+4. Try creating new features by mutilying existing features with one another (X3:=X1*X2)
