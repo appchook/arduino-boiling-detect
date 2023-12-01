@@ -16,7 +16,7 @@ if len(sys.argv) < 2:
     #inFile = "json_fixed_expanded.json"
     inFiles = ["3_expanded.json", "12_fixed_expanded.json", "15_fixed_expanded.json"]
 else:
-    inFiles = sys.argv[1:]
+    inFiles = sys.argv[1:] # best to run: python3 train_multi_file.py train-data/*.json
 
 single = len(inFiles) == 1
 
