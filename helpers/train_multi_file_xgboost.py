@@ -19,7 +19,7 @@ if len(sys.argv) < 2:
     #inFile = "json_fixed_expanded.json"
     inFiles = ["3_expanded.json", "12_fixed_expanded.json", "15_fixed_expanded.json"]
 else:
-    inFiles = sys.argv[1:] # best to run: python3 train_multi_file.py train-data/*.json
+    inFiles = sys.argv[1:] # best to run: python3 train_multi_file_xgboost.py train-data/*.json
 
 single = len(inFiles) == 1
 
@@ -45,7 +45,7 @@ print("after hacking and consolidating:")
 print(x_arr.shape)
 print(avg_time_arr.shape)
 
-x_tr, x_ts, y_tr, y_ts = train_test_split(x_arr, avg_time_arr, test_size = 0.2, random_state=42, shuffle=True)
+x_tr, x_ts, y_tr, y_ts = train_test_split(x_arr, avg_time_arr, test_size = 0.5, random_state=42, shuffle=True)
 # x_tr = x_arr
 # y_tr = avg_time_arr
 
