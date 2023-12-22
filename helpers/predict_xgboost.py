@@ -33,7 +33,7 @@ def predict():
         print(tst.shape)
         pred = regressor.predict(tst)
         print("prediction: ", pred)
-        predStr = str(pred[0][0])
+        predStr = str(pred[0])
 
     if outFile != None:
         with open(outFile, "w") as outfile:
