@@ -53,9 +53,10 @@ x_tr, x_ts, y_tr, y_ts = train_test_split(x_arr, avg_time_arr, test_size = 0.5, 
 regressor=xgb.XGBRegressor(eval_metric='rmse') # rmsle
 
 # set up our search grid
-param_grid = {"max_depth":    [3, 4, 5, 6, 7],
-              "n_estimators": [400, 500, 600, 700, 800],
-              "learning_rate": [0.007, 0.01, 0.015, 0.02]}
+param_grid = {"max_depth":    [3, 5, 7], # [3, 4, 5, 6, 7]
+              "n_estimators": [400, 600, 800], # [400, 500, 600, 700, 800]
+              "learning_rate": [0.01, 0.02, 0.04], # [0.007, 0.01, 0.015, 0.02]
+              "reg_lambda": [0.1, 0.3, 0.5]}
 
 # try out every combination of the above values
 search = GridSearchCV(regressor, param_grid, cv=5, verbose=2).fit(x_tr, y_tr)
@@ -65,6 +66,7 @@ print("The best hyperparameters are ",search.best_params_)
 regressor=xgb.XGBRegressor(learning_rate = search.best_params_["learning_rate"],
                            n_estimators  = search.best_params_["n_estimators"],
                            max_depth     = search.best_params_["max_depth"],
+                           reg_lambda    = search.best_params_["reg_lambda"],
                            eval_metric='rmse') # rmsle
 
 # Fitting the model 
@@ -92,7 +94,7 @@ for inFile in inFiles:
         idx = int(i*(len(temp_arr)/100))
         if(idx < 20 or idx > len(temp_arr) - 20):
             continue
-        my_x = createFeatures(idx, temp_arr, 20, 20)#[None,:]
+        my_x = createFeatures(idx, temp_arr, orig_time_arr, 20, 20)#[None,:]
         my_xs.append(my_x)
         #print(my_x.shape)
         #model.predict(my_x)
@@ -122,7 +124,7 @@ if single:
         idx = int(i*(len(temp_arr)/100))
         if(idx < 20 or idx > len(temp_arr) - 20):
             continue
-        my_x = createFeatures(idx, temp_arr, 20, 20)#[None,:]
+        my_x = createFeatures(idx, temp_arr, orig_time_arr, 20, 20)#[None,:]
         my_xs.append(my_x)
         #print(my_x.shape)
         #model.predict(my_x)
